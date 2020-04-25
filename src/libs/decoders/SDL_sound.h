@@ -746,4 +746,3 @@ inline Sound_SampleFlags& operator&= (Sound_SampleFlags& a, Sound_SampleFlags b)
 #endif  /* !defined _INCLUDE_SDL_SOUND_H_ */
 
 /* end of SDL_sound.h ... */
-

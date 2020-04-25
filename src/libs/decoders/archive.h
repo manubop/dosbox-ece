@@ -218,7 +218,7 @@ class Archive
             v = Swap(v); \
             m_stream.write((const char*)&v, sizeof(type)); \
             return *this; \
-        } 
+        }
 
         SERIALIZER_FOR_POD(bool)
         SERIALIZER_FOR_POD(char)

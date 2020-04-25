@@ -663,4 +663,3 @@ static Sint32 opus_seek(Sound_Sample* sample, const Uint32 ms)
 } /* opus_seek */
 
 /* end of ogg_opus.c ... */
-

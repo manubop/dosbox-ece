@@ -21,17 +21,30 @@
 
 //#include "render.h"
 #include "video.h"
+
+#define SCALER_MAX_MUL_WIDTH  3
+#define SCALER_MAX_MUL_HEIGHT 3
+
 #if RENDER_USE_ADVANCED_SCALERS>0
-#define SCALER_MAXWIDTH		1280 
+#define SCALER_MAXWIDTH 	1280 
 #define SCALER_MAXHEIGHT	1024
+#define SCALER_MAXX     	4096
 #else
 // reduced to save some memory
-#define SCALER_MAXWIDTH		800 
+#define SCALER_MAXWIDTH 	800 
 #define SCALER_MAXHEIGHT	600
+#define SCALER_MAXX     	2048
 #endif
 
+#if (SCALER_MAX_MUL_WIDTH * SCALER_MAXWIDTH) > SCALER_MAXX
+#define SCALER_MAXLINE_WIDTH SCALER_MAXX
+#else 
+#define SCALER_MAXLINE_WIDTH (SCALER_MAX_MUL_WIDTH * SCALER_MAXWIDTH)
+#endif
+
+
 #if RENDER_USE_ADVANCED_SCALERS>1
-#define SCALER_COMPLEXWIDTH		800
+#define SCALER_COMPLEXWIDTH 	800
 #define SCALER_COMPLEXHEIGHT	600
 #endif
 
@@ -113,13 +126,6 @@ extern ScalerSimpleBlock_t ScaleNormalDw;
 extern ScalerSimpleBlock_t ScaleNormalDh;
 extern ScalerSimpleBlock_t ScaleNormal2x;
 extern ScalerSimpleBlock_t ScaleNormal3x;
-extern ScalerSimpleBlock_t ScaleNormal4x;
-extern ScalerSimpleBlock_t ScaleNormal5x;
-extern ScalerSimpleBlock_t ScaleNormal6x;
-extern ScalerSimpleBlock_t ScaleNormalDw2x;
-extern ScalerSimpleBlock_t ScaleNormalDh2x;
-extern ScalerSimpleBlock_t ScaleNormalDw3x;
-extern ScalerSimpleBlock_t ScaleNormalDh3x;
 #if RENDER_USE_ADVANCED_SCALERS>0
 extern ScalerSimpleBlock_t ScaleTV2x;
 extern ScalerSimpleBlock_t ScaleTV3x;

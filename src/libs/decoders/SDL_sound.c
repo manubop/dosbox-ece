@@ -318,7 +318,7 @@ int __Sound_strcasecmp(const char *x, const char *y)
 
     if (y == NULL)
         return(1);
-       
+
     do
     {
         ux = toupper((int) *x);
@@ -831,4 +831,3 @@ Sint32 Sound_GetDuration(Sound_Sample *sample)
 } /* Sound_GetDuration */
 
 /* end of SDL_sound.c ... */
-

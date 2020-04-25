@@ -58,7 +58,7 @@
 #       define assert(x) if(!x) { fprintf(stderr,"Assertion failed in %s, line %s.\n",__FILE__,__LINE__); fclose(stderr); fclose(stdout); exit(1); }
 #   endif
 #endif
- 
+
 
 #if (!defined assert)  /* if all else fails. */
 #  define assert(x)
@@ -191,7 +191,7 @@ typedef struct __SOUND_DECODERFUNCTIONS__
         /*
          * Reset the decoding to the beginning of the stream. Nonzero on
          *  success, zero on failure.
-         *  
+         *
          * The purpose of this method is to allow for higher efficiency than
          *  an application could get by just recreating the sample externally;
          *  not only do they not have to reopen the RWops, reallocate buffers,
@@ -209,9 +209,9 @@ typedef struct __SOUND_DECODERFUNCTIONS__
         /*
          * Reposition the decoding to an arbitrary point. Nonzero on
          *  success, zero on failure.
-         *  
+         *
          * The purpose of this method is to allow for higher efficiency than
-         *  an application could get by just rewinding the sample and 
+         *  an application could get by just rewinding the sample and
          *  decoding to a given point.
          *
          * The decoder is responsible for calling seek() on the associated
@@ -331,4 +331,3 @@ extern "C" {
 #endif /* defined _INCLUDE_SDL_SOUND_INTERNAL_H_ */
 
 /* end of SDL_sound_internal.h ... */
-

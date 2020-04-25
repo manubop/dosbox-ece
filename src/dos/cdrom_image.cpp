@@ -934,7 +934,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr, int &shift, int prestart, int 
 		shift += prev.start + prev.length;
 		totalPregap = currPregap;
 	}
-		
+
 	#ifdef DEBUG
 	LOG_MSG("%s CDROM: AddTrack cur.start=%d cur.len=%d cur.start+len=%d | prev.start=%d prev.len=%d prev.start+len=%d",
 	        get_time(),

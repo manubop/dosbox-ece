@@ -385,7 +385,6 @@ static void DOSBOX_RealInit(Section * sec) {
 
 
 void DOSBOX_Init(void) {
-	//setenv( "SDL_VIDEO_CENTERED", "1", 1 ); //won't work with MinGW
 	Section_prop * secprop;
 	Section_line * secline;
 	Prop_int* Pint;
@@ -450,11 +449,11 @@ void DOSBOX_Init(void) {
 	Pint->SetMinMax(0,10);
 	Pint->Set_help("How many frames DOSBox skips before drawing one.");
 
-	Pbool = secprop->Add_bool("aspect",Property::Changeable::Always,true);
+	Pbool = secprop->Add_bool("aspect",Property::Changeable::Always,false);
 	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!");
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
-	Pmulti->SetValue("none");
+	Pmulti->SetValue("normal2x");
 	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes. If 'forced' is appended,\n"
 	                 "then the scaler will be used even if the result might not be desired.\n"
 					 "To fit a scaler in the resolution used at full screen may require a border or side bars,\n"
@@ -462,7 +461,7 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
 
 	const char *scalers[] = {
-		"none", "normal2x", "normal3x", "normal4x", "normal5x", "normal6x", 
+		"none", "normal2x", "normal3x",
 #if RENDER_USE_ADVANCED_SCALERS>2
 		"advmame2x", "advmame3x", "advinterp2x", "advinterp3x", "hq2x", "hq3x", "2xsai", "super2xsai", "supereagle",
 #endif
@@ -475,6 +474,14 @@ void DOSBOX_Init(void) {
 	const char* force[] = { "", "forced", 0 };
 	Pstring = Pmulti->GetSection()->Add_string("force",Property::Changeable::Always,"");
 	Pstring->Set_values(force);
+#if C_OPENGL
+	Pstring = secprop->Add_path("glshader",Property::Changeable::Always,"none");
+	Pstring->Set_help("Path to GLSL shader source to use with OpenGL output (\"none\" to disable).\n"
+					  "Can be either an absolute path, a file in the \"glshaders\" subdirectory\n"
+					  "of the DOSBox configuration directory, or one of the built-in shaders:\n"
+					  "advinterp2x, advinterp3x, advmame2x, advmame3x, rgb2x, rgb3x, scan2x,\n"
+					  "scan3x, tv2x, tv3x, sharp.");
+#endif
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
 	const char* cores[] = { "auto",
@@ -596,7 +603,8 @@ void DOSBOX_Init(void) {
 	Pstring->Set_help("Device that will receive the MIDI data from MPU-401.");
 
 	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
-	Pstring->Set_help("Special configuration options for the device driver. This is usually the id or part of the name of the device you want to use (find the id/name with mixer/listmidi).\n"
+	Pstring->Set_help("Special configuration options for the device driver. This is usually the id or part of the name of the device you want to use\n"
+	                  "(find the id/name with mixer/listmidi).\n"
 	                  "Or in the case of coreaudio, you can specify a soundfont here.\n"
 	                  "When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
 	                  "In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"

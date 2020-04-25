@@ -94,36 +94,66 @@
 
 #if SBPP == 15
 #define SC scalerSourceCache.b16
+#ifdef WORDS_BIGENDIAN
+#if DBPP == 15   // GGGBBBBBxRRRRRGG -> xRRRRRGGGGGBBBBB
+#define PMAKE(_VAL) (((_VAL>>8)&0x00FF)|((_VAL<<8)&0xFF00))
+#elif DBPP == 16 // gggBBBBBxRRRRRGg -> RRRRRGggggGBBBBB
+#define PMAKE(_VAL) (((_VAL>>8)&0x001F)|((_VAL>>7)&0x01C0)|((_VAL<<9)&0xFE00)|((_VAL<<4)&0x0020))
+#elif DBPP == 32 // GggBBBbbxRRRrrGG -> 00000000RRRrrRRRGGGggGGGBBBbbBBB
+#define PMAKE(_VAL) (((_VAL<<17)&0x00F80000)|((_VAL<<12)&0x00070000)|((_VAL<<14)&0x0000C000)|((_VAL>>2)&0x00003800)|((_VAL<<9)&0x00000600)|((_VAL>>7)&0x00000100)|((_VAL>>5)&0x000000F8)|((_VAL>>10)&0x00000007))
+#endif
+#else
 #if DBPP == 15
 #define PMAKE(_VAL) (_VAL)
-#elif DBPP == 16
-#define PMAKE(_VAL) (((_VAL) & 31) | ((_VAL) & ~31) << 1)
-#elif DBPP == 32
-#define PMAKE(_VAL)  (((_VAL&(31<<10))<<9)|((_VAL&(31<<5))<<6)|((_VAL&31)<<3))
+#elif DBPP == 16 // xRRRRRGggggBBBBB -> RRRRRGggggGBBBBB
+#define PMAKE(_VAL) ((_VAL & 31)|((_VAL & ~31)<<1)|((_VAL&0x0200)>>4))
+#elif DBPP == 32 // xRRRrrGGGggBBBbb -> RRRrrRRRGGGggGGGBBBbbBBB
+#define PMAKE(_VAL)  (((_VAL&(31<<10))<<9)|((_VAL&(31<<5))<<6)|((_VAL&31)<<3)|((_VAL&(7<<12))<<4)|((_VAL&(7<<7))<<1)|((_VAL&(7<<2))>>2))
+#endif
 #endif
 #define SRCTYPE Bit16u
 #endif
 
 #if SBPP == 16
 #define SC scalerSourceCache.b16
-#if DBPP == 15
-#define PMAKE(_VAL) (((_VAL&~31)>>1)|(_VAL&31))
+#ifdef WORDS_BIGENDIAN
+#if DBPP == 15   // GGgBBBBBRRRRRGGG -> 0RRRRRGGGGGBBBBB
+#define PMAKE(_VAL) (((_VAL>>8)&0x001F)|((_VAL>>9)&0x0060)|((_VAL<<7)&0x7F80))
+#elif DBPP == 16 // GGGBBBBBRRRRRGGG -> RRRRRGGGGGGBBBBB
+#define PMAKE(_VAL) (((_VAL>>8)&0x00FF)|((_VAL<<8)&0xFF00))
+#elif DBPP == 32 // gggBBBbbRRRrrGGg -> RRRrrRRRGGggggGGBBBbbBBB
+#define PMAKE(_VAL) (((_VAL<<16)&0x00F80000)|((_VAL<<11)&0x00070000)|((_VAL<<13)&0x0000E000)|((_VAL>>3)&0x00001C00)|((_VAL<<7)&0x00000300)|((_VAL>>5)&0x000000F8)|((_VAL>>10)&0x00000007))
+#endif
+#else
+#if DBPP == 15   // RRRRRGGGGGgBBBBB -> 0RRRRRGGGGGBBBBB
+#define PMAKE(_VAL) (((_VAL&~63)>>1)|(_VAL&31))
 #elif DBPP == 16
 #define PMAKE(_VAL) (_VAL)
-#elif DBPP == 32
-#define PMAKE(_VAL)  (((_VAL&(31<<11))<<8)|((_VAL&(63<<5))<<5)|((_VAL&31)<<3))
+#elif DBPP == 32 // RRRrrGGggggBBBbb -> RRRrrRRRGGggggGGBBBbbBBB
+#define PMAKE(_VAL)  (((_VAL&(31<<11))<<8)|((_VAL&(63<<5))<<5)|((_VAL&0xE01F)<<3)|((_VAL&(3<<9))>>1)|((_VAL&(7<<2))>>2))
+#endif
 #endif
 #define SRCTYPE Bit16u
 #endif
 
 #if SBPP == 32
 #define SC scalerSourceCache.b32
-#if DBPP == 15
+#ifdef WORDS_BIGENDIAN
+#if DBPP == 15   // BBBBBbbbGGGGGgggRRRRRrrrxxxxxxxx -> 0RRRRRGGGGGBBBBB
+#define PMAKE(_VAL) (PTYPE)(((_VAL>>27)&0x001F)|((_VAL>>14)&0x03E0)|((_VAL>>1)&0x7C00))
+#elif DBPP == 16 // BBBBBbbbGGGGGGggRRRRRrrrxxxxxxxx -> RRRRRGGGGGGBBBBB
+#define PMAKE(_VAL) (PTYPE)(((_VAL>>27)&0x001F)|((_VAL>>13)&0x07E0)|(_VAL&0xF800))
+#elif DBPP == 32 // BBBBBBBBGGGGGGGGRRRRRRRRxxxxxxxx -> RRRRRRRRGGGGGGGGBBBBBBBB
+#define PMAKE(_VAL) (((_VAL>>24)&0x000000FF)|((_VAL>>8)&0x0000FF00)|((_VAL<<8)&0x00FF0000))
+#endif
+#else
+#if DBPP == 15   // RRRRRrrrGGGGGgggBBBBBbbb -> 0RRRRRGGGGGBBBBB
 #define PMAKE(_VAL) (PTYPE)(((_VAL&(31<<19))>>9)|((_VAL&(31<<11))>>6)|((_VAL&(31<<3))>>3))
-#elif DBPP == 16
-#define PMAKE(_VAL) (PTYPE)(((_VAL&(31<<19))>>8)|((_VAL&(63<<10))>>4)|((_VAL&(31<<3))>>3))
+#elif DBPP == 16 // RRRRRrrrGGGGGGggBBBBBbbb -> RRRRRGGGGGGBBBBB
+#define PMAKE(_VAL) (PTYPE)(((_VAL&(31<<19))>>8)|((_VAL&(63<<10))>>5)|((_VAL&(31<<3))>>3))
 #elif DBPP == 32
 #define PMAKE(_VAL) (_VAL)
+#endif
 #endif
 #define SRCTYPE Bit32u
 #endif
@@ -257,113 +287,6 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
-#define SCALERNAME		Normal4x
-#define SCALERWIDTH		4
-#define SCALERHEIGHT	4
-#define SCALERFUNC							   \
-	line0[0] = P;								\
-	line0[1] = P;								\
-	line0[2] = P;								\
-	line0[3] = P;								\
-	line1[0] = P;								\
-	line1[1] = P;								\
-	line1[2] = P;								\
-	line1[3] = P;								\
-	line2[0] = P;								\
-	line2[1] = P;								\
-	line2[2] = P;								\
-	line2[3] = P;								\
-	line3[0] = P;								\
-	line3[1] = P;								\
-	line3[2] = P;								\
-	line3[3] = P; 
-#include "render_simple.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-
-#define SCALERNAME		Normal5x
-#define SCALERWIDTH		5
-#define SCALERHEIGHT	5
-#define SCALERFUNC							   \
-	line0[0] = P;								\
-	line0[1] = P;								\
-	line0[2] = P;								\
-	line0[3] = P;								\
-	line0[4] = P;								\
-	line1[0] = P;								\
-	line1[1] = P;								\
-	line1[2] = P;								\
-	line1[3] = P;								\
-	line1[4] = P;								\
-	line2[0] = P;								\
-	line2[1] = P;								\
-	line2[2] = P;								\
-	line2[3] = P;								\
-	line2[4] = P;								\
-	line3[0] = P;								\
-	line3[1] = P;								\
-	line3[2] = P;								\
-	line3[3] = P;								 \
-	line3[4] = P;								\
-	line4[0] = P;								\
-	line4[1] = P;								\
-	line4[2] = P;								\
-	line4[3] = P;								 \
-	line4[4] = P;								
-#include "render_simple.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-
-#define SCALERNAME		Normal6x
-#define SCALERWIDTH		6
-#define SCALERHEIGHT	6
-#define SCALERFUNC							   \
-	line0[0] = P;								\
-	line0[1] = P;								\
-	line0[2] = P;								\
-	line0[3] = P;								\
-	line0[4] = P;								\
-	line0[5] = P;								\
-	line1[0] = P;								\
-	line1[1] = P;								\
-	line1[2] = P;								\
-	line1[3] = P;								\
-	line1[4] = P;								\
-	line1[5] = P;								\
-	line2[0] = P;								\
-	line2[1] = P;								\
-	line2[2] = P;								\
-	line2[3] = P;								\
-	line2[4] = P;								\
-	line2[5] = P;								\
-	line3[0] = P;								\
-	line3[1] = P;								\
-	line3[2] = P;								\
-	line3[3] = P;								 \
-	line3[4] = P;								\
-	line3[5] = P;								\
-	line4[0] = P;								\
-	line4[1] = P;								\
-	line4[2] = P;								\
-	line4[3] = P;								 \
-	line4[4] = P;								\
-	line4[5] = P;								\
-	line5[0] = P;								\
-	line5[1] = P;								\
-	line5[2] = P;								\
-	line5[3] = P;								 \
-	line5[4] = P;								\
-	line5[5] = P;								
-#include "render_simple.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-
 #define SCALERNAME		NormalDw
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	1
@@ -382,98 +305,6 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #define SCALERFUNC								\
 	line0[0] = P;								\
 	line1[0] = P;
-#include "render_simple.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-
-#define SCALERNAME		NormalDw2x
-#define SCALERWIDTH		4
-#define SCALERHEIGHT	2
-#define SCALERFUNC								\
-	line0[0] = P;								\
-	line0[1] = P;								\
-	line0[2] = P;								\
-	line0[3] = P;								\
-	line1[0] = P;								\
-	line1[1] = P;								\
-	line1[2] = P;								\
-	line1[3] = P;
-#include "render_simple.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-
-#define SCALERNAME		NormalDh2x
-#define SCALERWIDTH		2
-#define SCALERHEIGHT	4
-#define SCALERFUNC								\
-	line0[0] = P;								\
-	line0[1] = P;							\
-	line1[0] = P;							\
-	line1[1] = P;							\
-	line2[0] = P;							\
-	line2[1] = P;							\
-	line3[0] = P;							\
-	line3[1] = P;
-#include "render_simple.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-
-#define SCALERNAME		NormalDw3x
-#define SCALERWIDTH		6
-#define SCALERHEIGHT	3
-#define SCALERFUNC								\
-	line0[0] = P;								\
-	line0[1] = P;								\
-	line0[2] = P;								\
-	line0[3] = P;								\
-	line0[4] = P;								\
-	line0[5] = P;								\
-	line1[0] = P;								\
-	line1[1] = P;								\
-	line1[2] = P;								\
-	line1[3] = P;								\
-	line1[4] = P;								\
-	line1[5] = P;								\
-	line2[0] = P;								\
-	line2[1] = P;								\
-	line2[2] = P;								\
-	line2[3] = P;								\
-	line2[4] = P;								\
-	line2[5] = P;
-#include "render_simple.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-
-#define SCALERNAME		NormalDh3x
-#define SCALERWIDTH		3
-#define SCALERHEIGHT	6
-#define SCALERFUNC								\
-	line0[0] = P;								\
-	line0[1] = P;							\
-	line0[2] = P;							\
-	line1[0] = P;							\
-	line1[1] = P;							\
-	line1[2] = P;							\
-	line2[0] = P;							\
-	line2[1] = P;							\
-	line2[2] = P;							\
-	line3[0] = P;							\
-	line3[1] = P;							\
-	line3[2] = P;							\
-	line4[0] = P;							\
-	line4[1] = P;							\
-	line4[2] = P;							\
-	line5[0] = P;							\
-	line5[1] = P;							\
-	line5[2] = P;
 #include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH

@@ -570,7 +570,7 @@ int Sound_ConvertAudio(Sound_AudioCVT *cvt)
 
 
 /*
- * Creates a set of audio filters to convert from one format to another. 
+ * Creates a set of audio filters to convert from one format to another.
  * Returns -1 if the format conversion is not supported, or 1 if the
  * audio filter is set up.
  */
@@ -594,7 +594,7 @@ int Sound_BuildAudioCVT(Sound_AudioCVT *cvt,
         SNDDBG(("Adding filter: Sound_ConvertEndian\n"));
         cvt->filters[cvt->filter_index++] = Sound_ConvertEndian;
     } /* if */
-	
+
         /* Second filter: Sign conversion -- signed/unsigned */
     if ((src_format & 0x8000) != (dst_format & 0x8000))
     {
@@ -730,4 +730,3 @@ int Sound_BuildAudioCVT(Sound_AudioCVT *cvt,
 } /* Sound_BuildAudioCVT */
 
 /* end of audio_convert.c ... */
-

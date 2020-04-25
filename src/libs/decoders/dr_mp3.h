@@ -2921,7 +2921,7 @@ static drmp3_uint32 drmp3_decode_next_frame_ex(drmp3* pMP3, drmp3d_sample_t* pPC
         }
 
         pcmFramesRead = drmp3dec_decode_frame(&pMP3->decoder, pMP3->pData, (int)pMP3->dataSize, pPCMFrames, &info);    /* <-- Safe size_t -> int conversion thanks to the check above. */
-        
+
         /* Consume the data. */
         leftoverDataSize = (pMP3->dataSize - (size_t)info.frame_bytes);
         if (info.frame_bytes > 0) {
@@ -3056,7 +3056,7 @@ drmp3_bool32 drmp3_init_internal(drmp3* pMP3, drmp3_read_proc onRead, drmp3_seek
     if (pMP3->channels != 0 && pMP3->sampleRate != 0) {
         drmp3_init_src(pMP3);
     }
-    
+
     /* Decode the first frame to confirm that it is indeed a valid MP3 stream. */
     if (!drmp3_decode_next_frame(pMP3)) {
         drmp3_uninit(pMP3);
@@ -3184,7 +3184,7 @@ void drmp3_uninit(drmp3* pMP3)
     if (pMP3 == NULL) {
         return;
     }
-    
+
 #ifndef DR_MP3_NO_STDIO
     if (pMP3->onRead == drmp3__on_read_stdio) {
         fclose((FILE*)pMP3->pUserData);
@@ -3526,7 +3526,7 @@ drmp3_bool32 drmp3_get_mp3_and_pcm_frame_count(drmp3* pMP3, drmp3_uint64* pMP3Fr
 
     /* We'll need to seek back to where we were, so grab the PCM frame we're currently sitting on so we can restore later. */
     currentPCMFrame = pMP3->currentPCMFrame;
-    
+
     if (!drmp3_seek_to_start_of_stream(pMP3)) {
         return DRMP3_FALSE;
     }
@@ -3634,7 +3634,7 @@ drmp3_bool32 drmp3_calculate_seek_points(drmp3* pMP3, drmp3_uint32* pSeekPointCo
 
     /* We'll need to seek back to the current sample after calculating the seekpoints so we need to go ahead and grab the current location at the top. */
     currentPCMFrame = pMP3->currentPCMFrame;
-    
+
     /* We never do more than the total number of MP3 frames and we limit it to 32-bits. */
     if (!drmp3_get_mp3_and_pcm_frame_count(pMP3, &totalMP3FrameCount, &totalPCMFrameCount)) {
         return DRMP3_FALSE;

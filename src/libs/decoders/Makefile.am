@@ -56,4 +56,3 @@ internal/include/speex/speex_resampler.h:
 clean-local:
 	cd internal \
 	&& $(MAKE) dist-clean
-
