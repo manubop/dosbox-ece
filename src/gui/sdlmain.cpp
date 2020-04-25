@@ -460,9 +460,9 @@ void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
 	if (cycles != -1) internal_cycles = cycles;
 	if (frameskip != -1) internal_frameskip = frameskip;
 	if(CPU_CycleAutoAdjust) {
-		sprintf(title,"DOSBox %s r4333, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s r4334, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	} else {
-		sprintf(title,"DOSBox %s r4333, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s r4334, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	}
 
 	if (paused) strcat(title," PAUSED");
@@ -905,13 +905,18 @@ dosurface:
 		if (!(flags & GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface;
 		if (!GFX_SetupSurfaceScaled(0,0)) goto dosurface;
 		sdl.overlay = SDL_CreateYUVOverlay(width * 2, height, SDL_UYVY_OVERLAY, sdl.surface);
-
-		if (sdl.overlay && sdl.overlay->pitches[0] < 4 * width) {
-			// We get a distorted image in this case. Cleanup and go to surface.
-			LOG_MSG("SDL: overlay pitch is too small. (%u < %" sBitfs(u) ")", sdl.overlay->pitches[0], width * 4);
-			SDL_FreeYUVOverlay(sdl.overlay);
-			sdl.overlay = 0;
+		
+		if (sdl.overlay && SDL_LockYUVOverlay(sdl.overlay) == 0) {
+			//Need to lock in order to get real pitchdata (at least on windows with dx backend)
+			if (sdl.overlay->pitches[0] < 4 * width) {
+				// We get a distorted image in this case. Cleanup and go to surface.
+				LOG_MSG("SDL: overlay pitch is too small. (%u < %" sBitfs(u) ")", sdl.overlay->pitches[0], width * 4);
+				SDL_UnlockYUVOverlay(sdl.overlay);
+				SDL_FreeYUVOverlay(sdl.overlay);
+				sdl.overlay = 0;
+			} else SDL_UnlockYUVOverlay(sdl.overlay);
 		}
+
 		if (!sdl.overlay) {
 			LOG_MSG("SDL: Failed to create overlay, switching back to surface.");
 			goto dosurface;
