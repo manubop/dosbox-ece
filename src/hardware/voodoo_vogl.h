@@ -21,6 +21,13 @@
 #define DOSBOX_VOODOO_VOGL_H
 
 #include "SDL.h"
+#ifndef _WIN32
+	#define GL_ARB_multitexture
+	#include <GL/gl.h>
+	#undef GL_ARB_multitexture
+	#include "config.h"
+	typedef Bit32s INT32;
+#endif
 #include "SDL_opengl.h"
 
 typedef Bit32s INT32;
