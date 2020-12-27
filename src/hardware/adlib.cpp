@@ -27,6 +27,7 @@
 #include "mapper.h"
 #include "mem.h"
 #include "dbopl.h"
+#include "cpu.h"
 #include "nukedopl.h"
 
 #include "mame/emu.h"
@@ -344,15 +345,24 @@ class Capture {
 	void WriteCache( void  ) {
 		Bitu i, val;
 		/* Check the registers to add */
-		for (i=0;i<256;i++) {
-			//Skip the note on entries
-			if (i>=0xb0 && i<=0xb8) 
-				continue;
+		for (i = 0;i < 256;i++) {
 			val = (*cache)[ i ];
+			//Silence the note on entries
+			if (i >= 0xb0 && i <= 0xb8) {
+				val &= ~0x20;
+			}
+			if (i == 0xbd) {
+				val &= ~0x1f;
+			}
+
 			if (val) {
 				AddWrite( i, val );
 			}
 			val = (*cache)[ 0x100 + i ];
+
+			if (i >= 0xb0 && i <= 0xb8) {
+				val &= ~0x20;
+			}
 			if (val) {
 				AddWrite( 0x100 + i, val );
 			}
@@ -471,39 +481,37 @@ Chip::Chip() : timer0(80), timer1(320) {
 }
 
 bool Chip::Write( Bit32u reg, Bit8u val ) {
+	//if(reg == 0x02 || reg == 0x03 || reg == 0x04) LOG(LOG_MISC,LOG_ERROR)("write adlib timer %X %X",reg,val);
 	switch ( reg ) {
 	case 0x02:
+		timer0.Update(PIC_FullIndex() );
 		timer0.SetCounter(val);
 		return true;
 	case 0x03:
+		timer1.Update(PIC_FullIndex());
 		timer1.SetCounter(val);
 		return true;
 	case 0x04:
-		double time;
-		time = PIC_FullIndex();
 		//Reset overflow in both timers
 		if ( val & 0x80 ) {
-			timer0.Reset( time );
-			timer1.Reset( time );
+			timer0.Reset();
+			timer1.Reset();
 		} else {
-			//timer 0 not masked
-			if (val&0x20) {
-				if (val & 0x1) {
-					timer0.Start(time);
-				}
-				else {
-					timer0.Stop();
-				}
+			const double time = PIC_FullIndex();
+			if (val & 0x1) {
+				timer0.Start(time);
 			}
-			//Timer 1 not masked
-			if (val&0x40) {
-				if (val & 0x2) {
-					timer1.Start(time);
-				}
-				else {
-					timer1.Stop();
-				}
+			else {
+				timer0.Stop();
 			}
+			if (val & 0x2) {
+				timer1.Start(time);
+			}
+			else {
+				timer1.Stop();
+			}
+			timer0.SetMask((val & 0x40) > 0);
+			timer1.SetMask((val & 0x20) > 0);
 		}
 		return true;
 	}
@@ -665,6 +673,12 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 
 
 Bitu Module::PortRead( Bitu port, Bitu iolen ) {
+	//roughly half a micro (as we already do 1 micro on each port read and some tests revealed it taking 1.5 micros to read an adlib port)
+	Bits delaycyc = (CPU_CycleMax/2048); 
+	if(GCC_UNLIKELY(delaycyc > CPU_Cycles)) delaycyc = CPU_Cycles;
+	CPU_Cycles -= delaycyc;
+	CPU_IODelayRemoved += delaycyc;
+
 	switch ( mode ) {
 	case MODE_OPL2:
 		//We allocated 4 ports, so just return -1 for the higher ones
@@ -704,6 +718,7 @@ Bitu Module::PortRead( Bitu port, Bitu iolen ) {
 
 void Module::Init( Mode m ) {
 	mode = m;
+	memset(cache, 0, sizeof(cache));
 	switch ( mode ) {
 	case MODE_OPL3:
 	case MODE_OPL3GOLD:
@@ -777,7 +792,7 @@ static void SaveRad() {
 	}
 	b[w++] = 0;		//instrument 0, no more instruments following
 	b[w++] = 1;		//1 pattern following
-	//Zero out the remaing part of the file a bit to make rad happy
+	//Zero out the remaining part of the file a bit to make rad happy
 	for ( int i = 0; i < 64; i++ ) {
 		b[w++] = 0;
 	}

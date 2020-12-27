@@ -460,9 +460,9 @@ void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
 	if (cycles != -1) internal_cycles = cycles;
 	if (frameskip != -1) internal_frameskip = frameskip;
 	if(CPU_CycleAutoAdjust) {
-		sprintf(title,"DOSBox %s r4356, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s r4393, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	} else {
-		sprintf(title,"DOSBox %s r4356, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s r4393, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	}
 
 	if (paused) strcat(title," PAUSED");
@@ -496,9 +496,10 @@ static void KillSwitch(bool pressed) {
 static void PauseDOSBox(bool pressed) {
 	if (!pressed)
 		return;
+	SDLMod inkeymod = SDL_GetModState();
+
 	GFX_SetTitle(-1,-1,true);
 	bool paused = true;
-	KEYBOARD_ClrBuffer();
 	SDL_Delay(500);
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -513,7 +514,14 @@ static void PauseDOSBox(bool pressed) {
 			case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
 			case SDL_KEYUP:
 			if(event.key.keysym.sym == SDLK_PAUSE) {
-
+				SDLMod outkeymod = (event.key.keysym.mod);
+				if (inkeymod != outkeymod) {
+					KEYBOARD_ClrBuffer();
+					MAPPER_LosingFocus();
+					//Not perfect if the pressed alt key is switched, but then we have to 
+					//insert the keys into the mapper or create/rewrite the event and push it.
+					//Which is tricky due to possible use of scancodes.
+				}
 				paused = false;
 				GFX_SetTitle(-1,-1,false);
 				break;
