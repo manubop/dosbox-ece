@@ -23,7 +23,7 @@ dnl Some needed libaries for OS2
 dnl perharps join this with the other target depended checks. move them upwards
 if test x$host = xi386-pc-os2-emx ; then
     CXXFLAGS="$CXXFLAGS -Zmt"
-    LDFLAGS="$LDFLAGS -Zomf -Zmt"
+    LDFLAGS="$LDFLAGS -Zmt"
 fi
 
 dnl Check for SDL
@@ -245,6 +245,9 @@ AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
      AC_MSG_RESULT([Debugger not enabled])
    elif test x$have_ncurses_lib = xyes -a x$have_curses_h = xyes ; then
      LIBS="$LIBS -lncurses"
+     if test x$host = xi386-pc-os2-emx ; then
+     	LIBS="$LIBS -ltinfo"
+     fi
      AC_DEFINE(C_DEBUG,1)
      if test x$enable_debug = xheavy ; then 
        AC_DEFINE(C_HEAVY_DEBUG,1)
@@ -634,17 +637,25 @@ case "$host" in
        ;;
 esac
 
-dnl Some stuff for the icon.
+dnl Some stuff for the icon and other makefile platform stuff.
+dnl Slightly double with the above, but that deals more with compiled features.
 case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        dnl Some stuff for the ico
        AC_CHECK_TOOL(WINDRES, windres, :)
+       DBPLATFORM="win"
+    ;;
+    *-*-darwin*)
+       WINDRES=":"
+       DBPLATFORM="mac"
     ;;
     *)
        WINDRES=":"
+       DBPLATFORM="other"
     ;;
 esac
        AM_CONDITIONAL(HAVE_WINDRES, test "x$WINDRES" != "x:")
+       AM_CONDITIONAL(MACOSX, test "x$DBPLATFORM" = "xmac")
        AC_SUBST(WINDRES)
 
 
@@ -671,6 +682,7 @@ src/libs/decoders/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
+src/platform/macosx/Makefile
 src/platform/visualc/Makefile
 visualc_net/Makefile
 include/Makefile

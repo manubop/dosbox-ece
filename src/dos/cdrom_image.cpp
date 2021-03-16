@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -258,7 +258,7 @@ void CDROM_Interface_Image::InitNewMedia()
 {
 }
 
-bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
+bool CDROM_Interface_Image::SetDevice(char* path, int /*forceCD*/)
 {
 	if (LoadCueSheet(path)) return true;
 	if (LoadIsoFile(path)) return true;
@@ -515,7 +515,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	return success;
 }
 
-bool CDROM_Interface_Image::LoadUnloadMedia(bool unload)
+bool CDROM_Interface_Image::LoadUnloadMedia(bool /*unload*/)
 {
 	return true;
 }
