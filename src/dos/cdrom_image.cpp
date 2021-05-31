@@ -392,8 +392,8 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start, unsigned long l
 
 	// The maximum storage achieved on a CDROM was ~900MB or just under 100 minutes
 	// with overburning, so use this threshold to sanity-check the start sector.
-	else if (start > 450000)
-		LOG(LOG_MISC, LOG_WARN)("Game tried to read sector %lu, which is beyond the 100-minute maximum of a CDROM", start);
+	//else if (start > 450000)
+	//	LOG(LOG_MISC, LOG_WARN)("Game tried to read sector %lu, which is beyond the 100-minute maximum of a CDROM", start);
 
 	// We can't play audio from a data track (as it would result in garbage/static)
 	else if(track >= 0 && tracks[track].attr == 0x40)
