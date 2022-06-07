@@ -89,10 +89,16 @@ public:
 		if (strcmp(section->Get_string("fluid.driver"),"default") != 0) {
 		fluid_settings_setnum(settings, "synth.cpu-cores", atof(section->Get_string("fluid.cores")));
 		}
-		fluid_settings_setnum(settings, "audio.periods", atof(section->Get_string("fluid.periods")));
-		fluid_settings_setnum(settings, "audio.period-size", atof(section->Get_string("fluid.periodsize")));
-		fluid_settings_setstr(settings, "synth.reverb.active", section->Get_string("fluid.reverb"));
-		fluid_settings_setstr(settings, "synth.chorus.active", section->Get_string("fluid.chorus"));
+		fluid_settings_setint(settings, "audio.periods", atoi(section->Get_string("fluid.periods")));
+		fluid_settings_setint(settings, "audio.period-size", atoi(section->Get_string("fluid.periodsize")));
+		if (section->Get_string("fluid.reverb")=="yes")
+			fluid_settings_setint(settings, "synth.reverb.active", 1);
+		else
+			fluid_settings_setint(settings, "synth.reverb.active", 0);
+		if (section->Get_string("fluid.chorus")=="yes")
+			fluid_settings_setint(settings, "synth.chorus.active", 1);
+		else
+			fluid_settings_setint(settings, "synth.chorus.active", 0);
 
 		synth = new_fluid_synth(settings);
 		if (!synth) {

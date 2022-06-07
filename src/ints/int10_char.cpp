@@ -328,9 +328,9 @@ void INT10_SetActivePage(Bit8u page) {
 
 void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURSOR_TYPE,last|(first<<8));
-	if (!IS_EGAVGA_ARCH) goto dowrite;
+	if (machine==MCH_CGA || IS_TANDY_ARCH) goto dowrite;
 	/* Skip CGA cursor emulation if EGA/VGA system is active */
-	if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x8)) {
+	if (machine==MCH_HERC || !(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x8)) {
 		/* Check for CGA type 01, invisible */
 		if ((first & 0x60) == 0x20) {
 			first=0x1e;
@@ -338,10 +338,10 @@ void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 			goto dowrite;
 		}
 		/* Check if we need to convert CGA Bios cursor values */
-		if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x1)) { // set by int10 fun12 sub34
+		if (machine==MCH_HERC || !(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x1)) { // set by int10 fun12 sub34
 //			if (CurMode->mode>0x3) goto dowrite;	//Only mode 0-3 are text modes on cga
 			if ((first & 0xe0) || (last & 0xe0)) goto dowrite;
-			Bit8u cheight=real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT)-1;
+			Bit8u cheight=((machine==MCH_HERC)?14:real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT))-1;
 			/* Creative routine i based of the original ibmvga bios */
 
 			if (last<first) {
@@ -403,7 +403,7 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 
 void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 	/* Externally used by the mouse routine */
-	PhysPt fontdata;
+	RealPt fontdata;
 	Bit16u cols = real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 	BIOS_CHEIGHT;
 	bool split_chr = false;
@@ -425,18 +425,18 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 		switch (machine) {
 		case MCH_CGA:
 		case MCH_HERC:
-			fontdata=PhysMake(0xf000,0xfa6e);
+			fontdata=RealMake(0xf000,0xfa6e);
 			break;
 		case TANDY_ARCH_CASE:
-			fontdata=Real2Phys(RealGetVec(0x44));
+			fontdata=RealGetVec(0x44);
 			break;
 		default:
-			fontdata=Real2Phys(RealGetVec(0x43));
+			fontdata=RealGetVec(0x43);
 			break;
 		}
 		break;
 	default:
-		fontdata=Real2Phys(RealGetVec(0x43));
+		fontdata=RealGetVec(0x43);
 		break;
 	}
 
@@ -444,13 +444,14 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 
 	for (Bit16u chr=0;chr<256;chr++) {
 
-		if (chr==128 && split_chr) fontdata=Real2Phys(RealGetVec(0x1f));
+		if (chr==128 && split_chr) fontdata=RealGetVec(0x1f);
 
 		bool error=false;
 		Bit16u ty=(Bit16u)y;
 		for (Bit8u h=0;h<cheight;h++) {
 			Bit8u bitsel=128;
-			Bit8u bitline=mem_readb(fontdata++);
+			Bit8u bitline=mem_readb(Real2Phys(fontdata));
+			fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+1);
 			Bit8u res=0;
 			Bit8u vidline=0;
 			Bit16u tx=(Bit16u)x;
@@ -464,7 +465,7 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 			ty++;
 			if(bitline != vidline){
 				/* It's not character 'chr', move on to the next */
-				fontdata+=(cheight-h-1);
+				fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+cheight-h-1);
 				error = true;
 				break;
 			}
@@ -479,6 +480,7 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 	*result = 0;
 }
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
+	if(CurMode->ptotal==1) page=0;
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);

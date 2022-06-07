@@ -2,7 +2,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 
 SUBDIRS = serialport mame
 
-EXTRA_DIST = opl.cpp opl.h adlib.h dbopl.h pci_devices.h nukedopl.h\
+EXTRA_DIST = opl.cpp opl.h nukedopl.h adlib.h dbopl.h pci_devices.h \
 	     voodoo_data.h voodoo_def.h voodoo_emu.h voodoo_interface.h voodoo_opengl.h voodoo_types.h voodoo_vogl.h
 
 noinst_LIBRARIES = libhardware.a
